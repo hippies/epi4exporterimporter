@@ -25,7 +25,7 @@ function import_epi_exporter_json($filename)
 {
 
 		if (file_exists($filename)) {
-	    $json = json_decode(file_get_contents($filename));
+	    $json = json_decode(file_get_contents($filename),true);
 	 	} else {
 	    exit('Failed to open ' . $filename);
 	}
@@ -33,37 +33,32 @@ function import_epi_exporter_json($filename)
 	return $json;
 }
 
-
-function parse_kar_json($json)
-{
-	$kardata = array();
-	$startpage = '';
-	$parents = array();
-	foreach ($json as $page)
-	{
-#		print $page->PageTypeName ."\n";
-		if ($page->PageTypeName == 'Startsida')
-		{
-			$startpage = $page->PageLink; 
-		}
-		$kardata[$page->PageLink] = $page; 	
-		if (!in_array($page->PageParentLink, $parents))	
-				$parents[] = $page->PageParentLink;
-	}
-	if ($startpage)
-	{
-	echo "Startsida: " . $startpage . "\n";
-	print_r($parents);
-	}
-	else
-	{
-		echo "Naaah, could not find any startpage!\n";
-	}
-
-#	print_r($kardata);
+function createTree(&$list, $parent){
+    $tree = array();
+    foreach ($parent as $k=>$l){
+        if(isset($list[$l['PageLink']])){
+            $l['children'] = createTree($list, $list[$l['PageLink']]);
+        }
+        $tree[] = $l;
+    } 
+    return $tree;
 }
 
-$json = import_epi_exporter_json('ExportedFile_Farsta_scoutkar_files_global_kopplade.xml.json');
+function parse_kar_json($arr)
+{
+
+foreach ($arr as $a){
+    $new[$a['PageParentLink']][] = $a;
+}
+$tree = createTree($new, array($arr[0]));
+print_r($tree);
+
+
+
+}
+
+#$json = import_epi_exporter_json('ExportedFile_Farsta_scoutkar_files_global_kopplade.xml.json');
+$json = import_epi_exporter_json('Birka_ExportedFile.xml.json');
 
 #print_r($json);
 #
